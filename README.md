@@ -4,7 +4,9 @@ An open-source bilingual (Traditional Chinese / English) role-playing simulator 
 
 > **Status: v0.1 prototype.** Core dialogue logic and GUI have automated tests / smoke tests. Microphone recognition and real-world voice playback depend on your own operating system, voices, microphone, and installed local language models, so have not been verified on all devices.
 
-![Screenshot of the running Tkinter program](docs/screenshot.png)
+![Close-circle layout (v0.1.1)](docs/layout-v0.1.1.svg)
+
+**v0.1.1 layout:** the host sits at the bottom center of a close, nearly circular ring (1.16:1 oval). Left 1 appears left of the host and Right 1 appears on the right. The diagram depicts seating geometry; the live Tkinter display includes colored speech bubbles and controls. / **v0.1.1 版面：** 主持人在下方中央，大家貼近圍成一圈（寬高比 1.16:1）。左一在主持人左側，右一在右側。圖示為座位配置；實際程式另有發話燈號及操作按鈕。
 
 **License:** MIT. No Vosk models or audio recordings are bundled. This project is an independent simulation of a group activity, not an official product of any activity author or training organization.
 
