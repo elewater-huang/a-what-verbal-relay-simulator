@@ -2,6 +2,15 @@
 
 All notable changes to this project are documented here. / 本專案的重要修改記錄於此。
 
+## [0.1.2] — 2026-11-18
+
+Fixed layout stability / 固定操作區位置：
+
+- Reserve a fixed-height reply-status area independently on both sides so incoming questions, changing queue counts, and multi-line prompts never shift any of the six clickable phrases.
+- Reserve a fixed-height bilingual instruction area so changing between Traditional Chinese and English does not reposition controls.
+- Added a Tkinter geometry regression test covering left/right pending questions, multiple queued prompts, and language switching.
+- No change to the game engine or voice rules.
+
 ## [0.1.1] — 2026-11-18
 
 Closer circle layout / 貼近式圍圈視角：
