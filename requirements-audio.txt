@@ -1,0 +1,2 @@
+# Optional offline text-to-speech. Without it, the GUI shows all dialogue.
+pyttsx3>=2.90
