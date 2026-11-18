@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="550" viewBox="0 0 900 550">
+<title>A What? v0.1.1 close-circle seating layout</title>
+<rect width="900" height="550" rx="16" fill="#17263e"/>
+<ellipse cx="450" cy="263" rx="210" ry="181" fill="none" stroke="#415677" stroke-dasharray="6 7" stroke-width="2"/>
+<circle cx="450.0" cy="444.0" r="37" fill="#596eab" stroke="#94aaff" stroke-width="2"/><text x="450.0" y="449.0" fill="#f3f6fc" font-family="sans-serif" font-size="13" font-weight="600" text-anchor="middle">主持人（你）</text>
+<circle cx="315.0" cy="401.7" r="37" fill="#21334b" stroke="#506c8b" stroke-width="2"/><text x="315.0" y="406.7" fill="#f3f6fc" font-family="sans-serif" font-size="12" font-weight="600" text-anchor="middle">左一（右八）</text>
+<circle cx="243.2" cy="294.4" r="37" fill="#21334b" stroke="#506c8b" stroke-width="2"/><text x="243.2" y="299.4" fill="#f3f6fc" font-family="sans-serif" font-size="12" font-weight="600" text-anchor="middle">左二（右七）</text>
+<circle cx="268.1" cy="172.5" r="37" fill="#21334b" stroke="#506c8b" stroke-width="2"/><text x="268.1" y="177.5" fill="#f3f6fc" font-family="sans-serif" font-size="12" font-weight="600" text-anchor="middle">左三（右六）</text>
+<circle cx="378.2" cy="92.9" r="37" fill="#21334b" stroke="#506c8b" stroke-width="2"/><text x="378.2" y="97.9" fill="#f3f6fc" font-family="sans-serif" font-size="12" font-weight="600" text-anchor="middle">左四（右五）</text>
+<circle cx="521.8" cy="92.9" r="37" fill="#21334b" stroke="#506c8b" stroke-width="2"/><text x="521.8" y="97.9" fill="#f3f6fc" font-family="sans-serif" font-size="12" font-weight="600" text-anchor="middle">左五（右四）</text>
+<circle cx="631.9" cy="172.5" r="37" fill="#21334b" stroke="#506c8b" stroke-width="2"/><text x="631.9" y="177.5" fill="#f3f6fc" font-family="sans-serif" font-size="12" font-weight="600" text-anchor="middle">左六（右三）</text>
+<circle cx="656.8" cy="294.4" r="37" fill="#21334b" stroke="#506c8b" stroke-width="2"/><text x="656.8" y="299.4" fill="#f3f6fc" font-family="sans-serif" font-size="12" font-weight="600" text-anchor="middle">左七（右二）</text>
+<circle cx="585.0" cy="401.7" r="37" fill="#21334b" stroke="#506c8b" stroke-width="2"/><text x="585.0" y="406.7" fill="#f3f6fc" font-family="sans-serif" font-size="12" font-weight="600" text-anchor="middle">左八（右一）</text>
+<text x="450" y="242" fill="#f3f6fc" font-family="sans-serif" font-size="22" font-weight="700" text-anchor="middle">A WHAT?</text>
+<text x="450" y="272" fill="#aab8cf" font-family="sans-serif" font-size="20" text-anchor="middle">🍎   🍌</text>
+<text x="450" y="302" fill="#aab8cf" font-family="sans-serif" font-size="15" text-anchor="middle">完整圍圈 · 微橢圓 1.16:1</text>
+<circle cx="265" cy="515" r="7" fill="#f6bf58"/>
+<text x="281" y="520" fill="#f6bf58" font-family="sans-serif" font-size="15">黃色：往上追問</text>
+<circle cx="490" cy="515" r="7" fill="#54d7a9"/>
+<text x="506" y="520" fill="#54d7a9" font-family="sans-serif" font-size="15">綠色：往下傳遞</text>
+</svg>
