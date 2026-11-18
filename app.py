@@ -81,6 +81,28 @@ def zh_number(n):
     return '十' + ZH_NUM[n-10] if n < 20 else str(n)
 
 
+def seat_layout(people, width, height):
+    """Return a close, nearly circular ellipse with the host at the bottom.
+
+    Seat numbers increase toward the host's *left* as viewed on screen.
+    Each physical seat has both a left- and a right-hand alias.
+    """
+    w=max(width, 580)
+    h=max(height, 430)
+    count=people+1
+    cx,cy=w/2, h/2
+    # Wider than tall by only 16%; deliberately avoid a distant table view.
+    rx=min(w*0.305, (h-112)*0.5*1.16, 228)
+    ry=rx/1.16
+    # Respect the gap between adjacent seats as the number of players grows.
+    node_r=max(23, min(38, ry*math.sin(math.pi/count)*0.75))
+    positions={}
+    for seat in range(count):
+        angle=math.pi+seat*2*math.pi/count
+        positions[seat]=(cx+rx*math.sin(angle), cy-ry*math.cos(angle))
+    return (cx,cy,rx,ry,node_r,positions)
+
+
 class App:
     def __init__(self, root):
         self.root = root
@@ -284,16 +306,13 @@ class App:
         c.delete('all')
         w=max(c.winfo_width(),580)
         h=max(c.winfo_height(),430)
-        cx=w/2; cy=h/2+4
+        cx,cy,rx,ry,node_r,positions=seat_layout(self.engine.people,w,h)
         n=self.engine.people+1
-        radius=min(w*.39,h*.38,254)
-        node_r=max(25,min(47,radius*math.sin(math.pi/n)*.72))
-        c.create_oval(cx-radius,cy-radius,cx+radius,cy+radius,
+
+        c.create_oval(cx-rx,cy-ry,cx+rx,cy+ry,
                       outline='#415677',width=2,dash=(5,6))
         for seat in range(n):
-            ang=seat*2*math.pi/n
-            x=cx-radius*math.sin(ang)
-            y=cy-radius*math.cos(ang)
+            x,y=positions[seat]
             event=self.last_event.get(seat)
             col=YELLOW if event and event.direction=='up' else GREEN if event else '#2b4060'
             active=bool(event)
@@ -306,9 +325,11 @@ class App:
             if active:
                 phrase=PHRASES[self.lang.get()][event.phrase]
                 c.create_text(x,y+15,text=phrase,fill=BG,font=('Arial',10,'bold'),width=node_r*2+16)
-        c.create_text(cx,cy-15,text='A WHAT?',font=('Arial',16,'bold'),fill=TEXT)
-        c.create_text(cx,cy+12,text='🍎    🍌',font=('Arial',15),fill=MUTED)
-        c.create_text(cx,cy+41,text=('問 ↗　答 ↘' if self.lang.get()=='zh' else 'ASK ↗   REPLY ↘'),
+
+        info_y=cy-6
+        c.create_text(cx,info_y-16,text='A WHAT?',font=('Arial',16,'bold'),fill=TEXT)
+        c.create_text(cx,info_y+10,text='🍎    🍌',font=('Arial',15),fill=MUTED)
+        c.create_text(cx,info_y+39,text=('問 ↗　答 ↘' if self.lang.get()=='zh' else 'ASK ↗   REPLY ↘'),
                       font=('Arial',10),fill=MUTED)
 
     def update_stats(self):
