@@ -1,0 +1,4 @@
+# Optional offline push-to-talk microphone, requires downloaded Vosk language models.
+# Install compatible versions for your Python / OS architecture.
+vosk
+sounddevice
