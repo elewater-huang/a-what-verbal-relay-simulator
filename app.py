@@ -205,8 +205,14 @@ class App:
         right_frame = tk.Frame(row,bg=PANEL,width=415,padx=12,pady=12)
         right_frame.pack(side='right',fill='y')
         right_frame.pack_propagate(False)
-        self.instructions=self.label(right_frame,fg=MUTED,size=9,justify='left',wraplength=390)
-        self.instructions.pack(fill='x',anchor='w',pady=(0,7))
+        # The bilingual instructions can wrap differently. Reserve their area
+        # too, so switching languages never shifts the controls mid-session.
+        instructions_slot=tk.Frame(right_frame,bg=PANEL,height=62)
+        instructions_slot.pack(fill='x',pady=(0,7))
+        instructions_slot.pack_propagate(False)
+        self.instructions=self.label(instructions_slot,fg=MUTED,size=9,
+                                     justify='left',wraplength=390,anchor='nw')
+        self.instructions.place(x=0,y=0,relwidth=1,relheight=1)
         pair = tk.Frame(right_frame,bg=PANEL)
         pair.pack(fill='x')
         self.side_frames = {}
@@ -226,8 +232,15 @@ class App:
             pad.bind('<ButtonPress-1>',lambda e,s=side:self.press(s))
             pad.bind('<ButtonRelease-1>',lambda e,s=side:self.release(s))
             self.pad_btns[side]=pad
-            pl=self.label(col,fg=YELLOW,size=9,wraplength=175,justify='left')
-            pl.pack(fill='x',pady=(0,7))
+            # Reserve a constant-height status area. A pending reply can add
+            # multiple lines of text, but must NEVER move any phrase button:
+            # the player may already be aiming at one of those positions.
+            prompt_slot=tk.Frame(col,bg=PANEL2,height=68)
+            prompt_slot.pack(fill='x',pady=(0,7))
+            prompt_slot.pack_propagate(False)
+            pl=self.label(prompt_slot,fg=YELLOW,size=9,
+                          wraplength=175,justify='left',anchor='nw')
+            pl.place(x=0,y=0,relwidth=1,relheight=1)
             self.prompt_lbls[side]=pl
             self.phrase_btns[side]={}
             for code in ('intro_apple','intro_banana','apple','banana','what','thanks'):
