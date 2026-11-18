@@ -2,6 +2,16 @@
 
 All notable changes to this project are documented here. / 本專案的重要修改記錄於此。
 
+## [0.1.1] — 2026-11-18
+
+Closer circle layout / 貼近式圍圈視角：
+
+- Move host to the bottom center and seat all participants around a complete ring (not a semicircle).
+- Use a compact ellipse with a 1.16:1 width-to-height ratio, without perspective depth or a distant meeting-table look.
+- Keep left seat 1 on the screen's left and right seat 1 on its right; seat aliases remain unchanged.
+- Add automated geometry tests for host position, mirrored directions, and compact aspect ratio.
+- Refresh the README screenshot / 更新 README 執行截圖。
+
 ## [0.1.0] — 2026-11-18
 
 Initial bilingual desktop prototype / 首次中英文桌面原型：
