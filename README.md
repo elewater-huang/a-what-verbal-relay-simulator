@@ -2,7 +2,7 @@
 
 An open-source bilingual (Traditional Chinese / English) role-playing simulator for the experiential-learning game **A What?** (also known as **Apple and Pineapple**). The original game is traditionally played in a circle, sometimes with physical props. **This simulator deliberately uses no props** and models verbal relay only.
 
-> **Status: v0.1 prototype.** Core dialogue logic and GUI have automated tests / smoke tests. Microphone recognition and real-world voice playback depend on your own operating system, voices, microphone, and installed local language models, so have not been verified on all devices.
+> **Status: v0.1.3 prototype (macOS push-to-talk fixes).** Core dialogue logic and GUI have automated tests / smoke tests. Microphone recognition and real-world voice playback depend on your own operating system, voices, microphone, and installed local language models, so have not been verified on all devices.
 
 ![Close-circle layout (v0.1.1)](docs/layout-v0.1.1.svg)
 
@@ -39,7 +39,7 @@ python app.py
 
 **左右按鈕：** 右側也有相同六句台詞，任何時候都可從另一方向啟動新訊息。當兩側都有待回答的問題時，你可以自己決定先回答哪一側。注意同一側有多筆等待時，v0.1 先用先進先出（FIFO）處理，避免「什麼」沒有辨識資訊時任意猜測其來源。
 
-**鍵盤：** 用滑鼠按過左／右區塊即可選定方向，再按 `1`～`6` 代表該區的六句台詞（自上而下）。使用麥克風時，按住 `←` 或 `→` 鍵、說話後放開即可辨識。
+**鍵盤：** 用滑鼠按過左／右區塊即可選定方向，再按 `1`～`6` 代表該區的六句台詞（自上而下）。使用麥克風時，按住 `←` 或 `→` 鍵、說話後放開即可辨識。**v0.1.3 修正 macOS 長按方向鍵時的重複按鍵事件，避免錄音閃爍或被反覆中斷。**
 
 **繞圈返回：** 當一條訊息傳到主持人的另一側，你須在該側說「什麼」，待問題循原路回到你原先發起的一側後再回答水果，最後在接收側說「謝謝」結束這條訊息。
 
@@ -50,7 +50,7 @@ python -m pip install -r requirements-audio.txt
 python app.py
 ```
 
-打開「播放語音」，模擬人物便會嘗試使用作業系統的 TTS 語音說出六句話。TTS 是用 `pyttsx3` 透過作業系統語音引擎執行；**必須有適當的中文或英文系統語音**才能正確發音。聲音會排隊播放，不會同時從兩個喇叭發聲；在非常密集的訊息交會中，畫面事件可能比音訊快。
+打開「播放語音」，模擬人物便會嘗試使用作業系統的 TTS 語音說出六句話。**macOS v0.1.3 改用內建 `say` 指令，Mac 不必為了播放語音安裝 `pyttsx3`；其他系統仍可用 `pyttsx3`。** 必須有適當的中文或英文系統語音才能正確發音。聲音會排隊播放，不會同時從兩個喇叭發聲；在密集交會中，畫面事件可能比音訊快。
 
 ### 按住說話（離線麥克風辨識，可選）
 
@@ -69,7 +69,9 @@ models/
 - [中文小模型](https://alphacephei.com/vosk/models/vosk-model-small-cn-0.22.zip)（簡體中文辨識結果會轉成內部繁體台詞代號）
 - [英文小模型](https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip)
 
-使用時：**按住左側或右側的「按住說話」區塊，說出六句之一，放開後辨識並提交**；也可按住鍵盤 `←`／`→`。模型採用六句台詞的受限詞彙，減少誤辨識。建議戴耳機，避免電腦 TTS 被麥克風再度收進去。
+使用時：**按住左側或右側的「按住說話」區塊，說出六句之一，放開後辨識並提交**；也可按住鍵盤 `←`／`→`。**按住期間整場遊戲暫停**：所有虛擬角色、等待時間與畫面事件都凍結；Mac 上目前播放中的 `say` 語音會被中止，未播放的語音會清空。放開後仍暫停至語音辨識結束，再恢復傳話，不會把累積的事件一次快轉。**被中斷的聲音不會從中途續播**。建議戴耳機。
+
+**中文辨識診斷：** 新版能處理部分繁／簡、分字與常見句型變化，受限詞彙無法解析時會再以一般詞彙解碼一次。下方提示會顯示 Vosk 原始辨識內容，例如 `辨識結果：这是苹果 → 這是蘋果`；若仍無法辨識，請記下顯示的 `grammar=...; free=...` 內容以利後續調整模型。這項改進仍需在你的 macOS 15.7.2 與中文口音環境實機確認。
 
 **注意：Windows 7 / Python 3.7 / 32-bit** 的 GUI／文字控制可先使用，但離線語音辨識是否能安裝，取決於 `vosk` 與 `sounddevice` 是否提供相容的 32 位元套件。最新公開的 Vosk PyPI wheel 不一定有 Windows x86 版本。請不要把「可以執行 GUI」視為「已驗證在所有舊系統可用麥克風」。在較新 64-bit Windows、Mac 或 Linux 系統比較容易安裝。
 
@@ -115,7 +117,7 @@ Click **This is an apple** on the left. When Left 1 (Right 8) lights up yellow w
 
 Use the **right** buttons for the opposite direction. You may decide which side to answer first when both sides are waiting. If multiple requests are outstanding *on the same side*, version 0.1 assigns answers in FIFO order.
 
-**Keyboard:** Click a side pad to select it, then use `1`–`6` for that side's six phrases. For optional offline voice input, hold `Left Arrow` or `Right Arrow` while speaking; release to transcribe.
+**Keyboard:** Click a side pad to select it, then use `1`–`6` for that side's six phrases. For offline voice input, hold `Left Arrow` or `Right Arrow` while speaking; release to transcribe. Version 0.1.3 debounces repeated macOS key events so holding a key cannot rapidly start/stop multiple recordings.
 
 **Completing the circle:** The final simulated person sends the introduction to you from the *opposite* side. You then say **What?** to that neighbor; the question travels back to the originating side, where you answer the fruit. When the answer comes back around, say **Thank you** on the receiving side to finish.
 
@@ -125,7 +127,7 @@ Use the **right** buttons for the opposite direction. You may decide which side 
 python -m pip install -r requirements-audio.txt
 ```
 
-Enable **Speak aloud**. `pyttsx3` uses whichever Chinese and English voices your system provides. Speech is queued, so overlapping virtual utterances do not play simultaneously. Systems without a compatible voice can use the text interface.
+Enable **Speak aloud**. **macOS v0.1.3 uses the built-in `say` program and needs no `pyttsx3` installation just for speech output.** Windows/Linux can continue using `pyttsx3` with available system voices. Queued utterances are serialized; when push-to-talk starts, the Mac's currently speaking process is terminated and pending speech is discarded.
 
 ### Optional offline push-to-talk microphone
 
@@ -135,7 +137,7 @@ python -m pip install -r requirements-microphone.txt
 
 Download the two [Vosk small language models](https://alphacephei.com/vosk/models) and extract the inner model files directly into `models/zh/` and `models/en/`, respectively. The names of the extracted outer folders are not important; the directory paths above are. The model files themselves are **not** included in this repository.
 
-Hold a left/right pad (or `←` / `→` arrow key), speak one of six phrases, release to decode locally. The grammar is constrained to the six phrases plus an unknown-word option. Headphones are recommended to avoid feedback from computer speech.
+Hold a left/right pad (or `←` / `→` arrow key), speak one of six phrases, release to decode locally. **The entire simulated game clock stops on press**, including virtual participants and pending animations, and stays stopped until recognition completes. On macOS active speech is interrupted and the remaining queue discarded to avoid microphone feedback. The paused interval does not count toward reaction time; events resume in order, not all at once. Chinese recognition now attempts a full-vocabulary fallback when constrained decoding fails, and the UI displays the raw recognition result for diagnosis. Model/voice quality still requires device-specific verification.
 
 **Compatibility:** The GUI is intended for Python 3.7+, including older 32-bit installations. Installing Vosk speech recognition on Windows 7 / 32-bit Python is *not guaranteed*; check wheel availability and supported builds. Newer 64-bit systems are the recommended target for the voice mode.
 
@@ -150,7 +152,8 @@ python -m unittest discover -s tests -v
 - Same-side identical outstanding questions are resolved FIFO, because the words themselves have no message ID.
 - The screen's event timing and the serialized TTS queue may drift when two streams overlap heavily.
 - Replay is not yet implemented, but CSV log export is.
-- Desktop audio input/output has not been validated across every OS, voice pack, and hardware configuration.
+- Desktop audio input/output has not been validated across every OS, voice pack, and hardware configuration; Chinese Vosk performance on macOS 15.7.2 remains to be checked on a real microphone.
+- On Windows/Linux with `pyttsx3`, an utterance already playing may finish while the game clock is paused; queued utterances are discarded. The built-in macOS `say` path supports immediate interruption.
 
 ---
 
