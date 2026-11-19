@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented here. / 本專案的重要修改記錄於此。
 
+## [0.1.3] — 2026-11-19
+
+macOS push-to-talk and audio isolation / macOS 按住發話與音訊隔離：
+
+- Debounce macOS arrow-key auto-repeat: one key hold causes one microphone session, not rapid repeated start/stop.
+- Freeze simulated time, all scheduled relay events, and animated speaker circles while push-to-talk is held or audio is being decoded; resume with original remaining delays after recognition.
+- On macOS, use interruptible native `say` speech synthesis; pressing a talk key stops active TTS and discards queued utterances before opening the microphone.
+- Improve six-phrase Mandarin mapping (simplified/traditional, spaced characters and common variants), add segmented grammar and a fallback general Chinese Vosk decode.
+- Display raw recognized text or decoding diagnostics to distinguish microphone/model errors from incorrect command mapping.
+- Add unit tests for pause/resume timing, macOS key repeat, voice mapping and recording lifecycle.
+- **Mac microphone and Chinese recognition are not yet hardware-verified.** Windows/Linux pyttsx3 may finish an in-progress utterance after pause, although the simulation clock freezes.
+
 ## [0.1.2] — 2026-11-18
 
 Fixed layout stability / 固定操作區位置：
