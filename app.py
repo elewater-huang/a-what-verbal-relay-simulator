@@ -15,6 +15,7 @@ from datetime import datetime
 
 from simulator import Simulator, PHRASES
 from voice import PushToTalk, Speaker
+from timing import PauseableClock
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 BG = '#0b1729'
@@ -34,7 +35,7 @@ STRINGS = {
   'reset':'套用設定／重新開始', 'export':'匯出紀錄 CSV',
   'host':'主持人（你）', 'left':'左側', 'right':'右側',
   'up':'黃色：向源頭追問／致謝', 'down':'綠色：向下一位傳遞／回答',
-  'instructions':'按住左／右側區塊或 ←／→ 鍵說話；放開後辨識。\n未安裝離線語音模型時，改按下面六句台詞。',
+  'instructions':'按住左／右側區塊或 ←／→ 鍵說話時全場暫停，放開後辨識。\n未安裝離線語音模型時，改按下面六句台詞。',
   'hold':'按住說話', 'pending':'待你回覆', 'log':'對話與事件紀錄',
   'none':'目前沒有待回覆訊息', 'answer':'有人問了「什麼」；請回答水果',
   'ask-back':'訊息繞回你這裡；先問「什麼」',
@@ -42,7 +43,9 @@ STRINGS = {
   'invalid':'這一側目前沒有等待這句話；先檢查傳遞順序',
   'no-prompt':'這一側目前沒有人在等待你回話',
   'mic-unavailable':'麥克風尚未啟用：需安裝 vosk、sounddevice 和語音模型；可使用文字按鈕。',
-  'recording':'錄音中，放開按鍵完成辨識…',
+  'recording':'錄音中（對話已暫停），放開按鍵完成辨識…',
+  'recognizing':'辨識中（對話仍暫停）…',
+  'recognized':'辨識結果：{raw} → {phrase}',
   'not-understood':'沒有辨識出六句指定台詞，請再說一次。',
   'voice-error':'語音辨識錯誤：', 'new':'新訊息已送出',
   'done':'一條訊息完成環繞，回到主持人！',
@@ -56,7 +59,7 @@ STRINGS = {
   'reset':'Apply / Restart', 'export':'Export log CSV',
   'host':'Host (you)', 'left':'LEFT', 'right':'RIGHT',
   'up':'Yellow: ask / thank upstream', 'down':'Green: relay / answer downstream',
-  'instructions':'Hold a LEFT / RIGHT pad or ← / → key to speak; release to recognize.\nWithout an offline speech model, use the six phrase buttons.',
+  'instructions':'Hold a LEFT / RIGHT pad or ← / → key to pause and speak; release to recognize.\nWithout an offline speech model, use the six phrase buttons.',
   'hold':'Hold to speak', 'pending':'Waiting on you',
   'log':'Dialogue and event log', 'none':'No reply needed yet',
   'answer':'Someone asked “What?”; answer with the fruit',
@@ -65,7 +68,9 @@ STRINGS = {
   'invalid':'That phrase is not expected on this side; check the relay order',
   'no-prompt':'Nobody is waiting for an answer on this side',
   'mic-unavailable':'Microphone not enabled: install vosk, sounddevice and a model; use phrase buttons instead.',
-  'recording':'Recording; release to recognize…',
+  'recording':'Recording (game paused); release to recognize…',
+  'recognizing':'Recognizing (game still paused)…',
+  'recognized':'Recognized: {raw} → {phrase}',
   'not-understood':'Could not recognize one of the six phrases; please retry.',
   'voice-error':'Speech recognition error: ', 'new':'New message started',
   'done':'A message has circled all the way back to the host!',
@@ -113,6 +118,9 @@ class App:
         self.audio_var = tk.BooleanVar(value=True)
         self.selected = tk.StringVar(value='L')
         self.active_key = None
+        self.release_job = None
+        self.recording_side = None
+        self.clock = PauseableClock(root)
         self.last_event = {}
         self.last_serial = {}
         self.serial = 0
@@ -140,7 +148,7 @@ class App:
         return STRINGS[self.lang.get()][name]
 
     def schedule(self, seconds, fn):
-        self.root.after(max(0, int(seconds*1000)), fn)
+        self.clock.schedule(seconds, fn)
 
     def frame(self, parent, **kw):
         return tk.Frame(parent, bg=PANEL, **kw)
@@ -377,7 +385,7 @@ class App:
             if self.last_serial.get(event.seat)==seq:
                 self.last_event.pop(event.seat,None)
                 self.redraw()
-        self.root.after(max(1800,int(self.engine.reaction*1000)),clear)
+        self.schedule(max(1.8,self.engine.reaction),clear)
         self.update_stats()
 
     def on_prompt(self,prompts):
@@ -412,43 +420,81 @@ class App:
         self.update_stats()
 
     def key_down(self,side):
-        if self.active_key:
+        # macOS/Tk can synthesize release/press pairs while a key is held.
+        # Delay the final release briefly; a repeat press cancels it.
+        if self.active_key == side:
+            if self.release_job is not None:
+                self.root.after_cancel(self.release_job)
+                self.release_job = None
             return 'break'
-        self.active_key=side
+        if self.active_key is not None:
+            return 'break'
+        self.active_key = side
         self.press(side)
         return 'break'
 
     def key_up(self,side):
-        if self.active_key==side:
-            self.active_key=None
-            self.release(side)
+        if self.active_key != side:
+            return 'break'
+        if self.release_job is not None:
+            self.root.after_cancel(self.release_job)
+        self.release_job = self.root.after(85, lambda s=side:self.finish_key_release(s))
         return 'break'
 
+    def finish_key_release(self,side):
+        self.release_job = None
+        if self.active_key == side:
+            self.active_key = None
+            self.release(side)
+
     def number_key(self,event):
+        if self.recording_side is not None:
+            return 'break'
         if event.char in '123456':
             code=('intro_apple','intro_banana','apple','banana','what','thanks')[int(event.char)-1]
             self.submit(self.selected.get(),code)
 
     def press(self,side):
+        if self.recording_side is not None:
+            return
         self.selected.set(side)
+        # Freeze both the game clock and synthetic audio before opening mic.
+        self.clock.pause()
+        self.speaker.pause()
         ok,reason=self.mic.start(self.lang.get())
         if not ok:
+            self.speaker.resume()
+            self.clock.resume()
             self.set_notice(self.t('mic-unavailable') if reason=='no-model-or-package' else reason)
-        else:
-            self.set_notice(self.t('recording'))
+            return
+        self.recording_side = side
+        self.set_notice(self.t('recording'))
 
     def release(self,side):
-        if self.mic.stream is None:
+        if self.recording_side != side:
             return
-        self.mic.stop(lambda code,raw,error:self.mic_result(side,code,raw,error))
+        self.set_notice(self.t('recognizing'))
+        try:
+            self.mic.stop(lambda code,raw,error:self.mic_result(side,code,raw,error))
+        except Exception as exc:
+            self.mic_result(side,None,'',str(exc))
 
     def mic_result(self,side,code,raw,error):
-        if error:
-            self.set_notice(self.t('voice-error')+error)
-        elif code:
-            self.submit(side,code)
-        else:
-            self.set_notice(self.t('not-understood')+' ['+raw+']')
+        if self.recording_side != side:
+            return
+        try:
+            if error:
+                self.set_notice(self.t('voice-error')+error)
+            elif code:
+                self.submit(side,code)
+                self.set_notice(self.t('recognized').format(
+                    raw=raw or '(empty)', phrase=PHRASES[self.lang.get()][code]))
+            else:
+                self.set_notice(self.t('not-understood')+' ['+(raw or '(empty)')+']')
+        finally:
+            self.recording_side = None
+            self.speaker.resume()
+            self.clock.resume()
 
     def reset(self):
         try:
@@ -459,6 +505,7 @@ class App:
         except (ValueError,tk.TclError):
             messagebox.showerror('Invalid settings','People: 3–16; reaction: 0–10 seconds.')
             return
+        self.clock.clear()
         self.engine.reset(count,delay)
         self.last_event.clear()
         self.last_serial.clear()
@@ -482,6 +529,10 @@ class App:
             wr.writerows(self.recorded)
 
     def close(self):
+        if self.release_job is not None:
+            self.root.after_cancel(self.release_job)
+            self.release_job = None
+        self.clock.close()
         self.speaker.close()
         self.root.destroy()
 
